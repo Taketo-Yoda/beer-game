@@ -25,4 +25,26 @@ MIT Sloanで考案されたサプライチェーン管理シミュレーショ�
 
 ## セットアップ
 
-準備中（backend/frontendの実装完了後に追記します）。
+### バックエンド（要 [uv](https://docs.astral.sh/uv/)）
+
+```bash
+cd backend
+uv run uvicorn app.main:app --reload --port 8000
+```
+
+テスト実行:
+
+```bash
+cd backend
+uv run pytest
+```
+
+### フロントエンド（要 Node.js）
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+`http://localhost:5173` を開いてプレイできます（バックエンドは `http://localhost:8000` で起動している必要があります）。
