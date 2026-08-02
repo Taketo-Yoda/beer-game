@@ -54,6 +54,9 @@ class RoleState(BaseModel):
     incoming_orders: tuple[int, ...]
     last_order_placed: int = 0
     last_shipment_received: int = 0
+    last_shipment_sent: int = 0
+    last_holding_cost: float = 0.0
+    last_backorder_cost: float = 0.0
     last_week_cost: float = 0.0
     cumulative_cost: float = 0.0
     order_history: tuple[int, ...] = ()

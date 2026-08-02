@@ -80,6 +80,9 @@ def test_insufficient_inventory_creates_backlog_and_cost():
     assert retailer.inventory == 0
     assert retailer.backlog == 2
     assert retailer.last_shipment_received == 0
+    assert retailer.last_shipment_sent == 2
+    assert retailer.last_holding_cost == pytest.approx(0.0)
+    assert retailer.last_backorder_cost == pytest.approx(2.0)
     assert retailer.last_week_cost == pytest.approx(2.0)
     assert retailer.cumulative_cost == pytest.approx(2.0)
     assert retailer.inventory_history == (0,)

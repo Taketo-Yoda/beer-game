@@ -83,15 +83,20 @@ def advance_week(state: GameState, config: GameConfig, orders: dict[Role, int]) 
             update={
                 "inventory": rs.inventory - ship_qty,
                 "backlog": total_demand - ship_qty,
+                "last_shipment_sent": ship_qty,
             }
         )
 
     # Phase 4: コスト加算、履歴記録
     stage4: dict[Role, RoleState] = {}
     for role, rs in stage3.items():
-        cost = rs.inventory * config.holding_cost_per_unit + rs.backlog * config.backorder_cost_per_unit
+        holding_cost = rs.inventory * config.holding_cost_per_unit
+        backorder_cost = rs.backlog * config.backorder_cost_per_unit
+        cost = holding_cost + backorder_cost
         stage4[role] = rs.model_copy(
             update={
+                "last_holding_cost": holding_cost,
+                "last_backorder_cost": backorder_cost,
                 "last_week_cost": cost,
                 "cumulative_cost": rs.cumulative_cost + cost,
                 "inventory_history": rs.inventory_history + (rs.inventory,),

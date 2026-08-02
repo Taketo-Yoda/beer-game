@@ -1,25 +1,35 @@
 import { ROLE_ICONS, ROLE_LABELS, downstreamOf, upstreamOf, type Role } from "../types";
 
-const MAX_BEER_ICONS = 20;
+const UNITS_PER_PACK = 10;
+const MAX_PACK_ICONS = 12;
 
 export function BeerStock({ count }: { count: number }) {
-  const shown = Math.min(count, MAX_BEER_ICONS);
-  const overflow = count - shown;
+  if (count === 0) {
+    return (
+      <div className="beer-stock" aria-label="在庫 0個">
+        <span className="muted">在庫なし</span>
+      </div>
+    );
+  }
+
+  const totalPacks = Math.floor(count / UNITS_PER_PACK);
+  const shownPacks = Math.min(totalPacks, MAX_PACK_ICONS);
+  const looseUnits = count - totalPacks * UNITS_PER_PACK;
+  const overflow = (totalPacks - shownPacks) * UNITS_PER_PACK;
 
   return (
     <div className="beer-stock" aria-label={`在庫 ${count}個`}>
-      {count === 0 ? (
-        <span className="muted">在庫なし</span>
-      ) : (
-        <>
-          {Array.from({ length: shown }, (_, i) => (
-            <span key={i} className="beer-icon">
-              🍺
-            </span>
-          ))}
-          {overflow > 0 && <span className="beer-overflow">+{overflow}</span>}
-        </>
-      )}
+      {Array.from({ length: shownPacks }, (_, i) => (
+        <span key={`pack-${i}`} className="beer-pack" title={`${UNITS_PER_PACK}個パック`}>
+          🍺<span className="beer-pack-count">×{UNITS_PER_PACK}</span>
+        </span>
+      ))}
+      {Array.from({ length: looseUnits }, (_, i) => (
+        <span key={`unit-${i}`} className="beer-icon">
+          🍺
+        </span>
+      ))}
+      {overflow > 0 && <span className="beer-overflow">+{overflow}</span>}
     </div>
   );
 }

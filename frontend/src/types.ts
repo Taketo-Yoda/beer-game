@@ -31,6 +31,9 @@ export interface RoleView {
   inventory: number;
   backlog: number;
   last_shipment_received: number;
+  last_shipment_sent: number;
+  last_holding_cost: number;
+  last_backorder_cost: number;
   last_week_cost: number;
   cumulative_cost: number;
   last_order_placed: number;

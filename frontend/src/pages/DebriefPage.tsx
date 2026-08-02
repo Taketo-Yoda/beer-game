@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { getDebrief } from "../api/client";
-import { formatYen } from "../format";
+import { formatManYen } from "../format";
 import { GRIDLINE, MUTED_INK, roleColor, useIsDarkMode } from "../theme/palette";
 import { ROLE_LABELS, type DebriefView, type Role } from "../types";
 
@@ -117,7 +117,7 @@ export function DebriefPage({ gameId }: { gameId: string }) {
       <h1>ゲーム終了 - 振り返り</h1>
       <p className="muted">
         全{debrief.weeks_played}週を完了しました。サプライチェーン全体の累計コストは
-        {formatYen(totalCost)} でした。上流（工場）ほど発注量の振れ幅が大きくなる
+        {formatManYen(totalCost)} でした。上流（工場）ほど発注量の振れ幅が大きくなる
         「ブルウィップ効果」がグラフから確認できるはずです。
       </p>
 
@@ -136,7 +136,7 @@ export function DebriefPage({ gameId }: { gameId: string }) {
           {debrief.roles.map((role) => (
             <tr key={role.role}>
               <td>{ROLE_LABELS[role.role]}</td>
-              <td>{formatYen(role.cumulative_cost)}</td>
+              <td>{formatManYen(role.cumulative_cost)}</td>
             </tr>
           ))}
         </tbody>

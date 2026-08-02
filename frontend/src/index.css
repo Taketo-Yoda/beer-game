@@ -161,6 +161,23 @@ h2 {
   line-height: 1;
 }
 
+.beer-pack {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  line-height: 1;
+}
+
+.beer-pack-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
 .beer-overflow {
   font-size: 13px;
   color: var(--text-secondary);
@@ -206,6 +223,12 @@ h2 {
 
 .stat-value {
   font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-breakdown {
+  font-size: 12px;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 

@@ -16,6 +16,9 @@ class RoleView(BaseModel):
     inventory: int
     backlog: int
     last_shipment_received: int
+    last_shipment_sent: int
+    last_holding_cost: float
+    last_backorder_cost: float
     last_week_cost: float
     cumulative_cost: float
     last_order_placed: int

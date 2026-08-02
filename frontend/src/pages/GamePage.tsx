@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { submitOrder } from "../api/client";
 import { BeerStock, SupplyChainStrip } from "../components/GameVisuals";
-import { formatYen } from "../format";
+import { formatManYen } from "../format";
 import type { GameStateView } from "../types";
 
 export function GamePage({
@@ -69,16 +69,23 @@ export function GamePage({
           <span className="stat-value">{you.last_shipment_received}</span>
         </div>
         <div className="stat-tile">
+          <span className="stat-label">今週の出荷</span>
+          <span className="stat-value">{you.last_shipment_sent}</span>
+        </div>
+        <div className="stat-tile">
           <span className="stat-label">今週の受注</span>
           <span className="stat-value">{state.demand_to_decide}</span>
         </div>
         <div className="stat-tile">
           <span className="stat-label">今週のコスト</span>
-          <span className="stat-value">{formatYen(you.last_week_cost)}</span>
+          <span className="stat-value">{formatManYen(you.last_week_cost)}</span>
+          <span className="stat-breakdown">
+            在庫 {formatManYen(you.last_holding_cost)} / 受注残 {formatManYen(you.last_backorder_cost)}
+          </span>
         </div>
         <div className="stat-tile">
           <span className="stat-label">累計コスト</span>
-          <span className="stat-value">{formatYen(you.cumulative_cost)}</span>
+          <span className="stat-value">{formatManYen(you.cumulative_cost)}</span>
         </div>
       </div>
 
