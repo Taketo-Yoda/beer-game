@@ -1,6 +1,11 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.rate_limit import rate_limit
+
+# レート制限はここでは対象外(専用のtest_rate_limit.pyで検証する)。
+# 有効なままだと1テストが上限(30req/分)を超え、ビジネスロジックのテストに影響するため無効化する。
+app.dependency_overrides[rate_limit] = lambda: None
 
 client = TestClient(app)
 

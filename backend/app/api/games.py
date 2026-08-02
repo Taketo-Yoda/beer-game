@@ -12,9 +12,10 @@ from ..schemas import (
     RoleView,
     SubmitOrderRequest,
 )
+from ..rate_limit import rate_limit
 from ..store.game_store import GameStore, StoredGame, get_game_store
 
-router = APIRouter(prefix="/api/games", tags=["games"])
+router = APIRouter(prefix="/api/games", tags=["games"], dependencies=[Depends(rate_limit)])
 
 
 def _get_game_or_404(store: GameStore, game_id: str) -> StoredGame:

@@ -13,6 +13,9 @@ class StoredGame:
     state: GameState
 
 
+_MAX_STORED_GAMES = 1000
+
+
 class GameStore:
     """ゲーム状態の永続化層。Phase 1ではプロセス内メモリのdictで十分だが、
     将来Redis/DBへ差し替えられるようインターフェースをこのクラスに閉じ込める。"""
@@ -21,6 +24,11 @@ class GameStore:
         self._games: dict[str, StoredGame] = {}
 
     def create(self, human_role: Role, config: GameConfig) -> StoredGame:
+        # 際限のないメモリ増加を防ぐため、上限を超えたら最も古いゲームから破棄する
+        if len(self._games) >= _MAX_STORED_GAMES:
+            oldest_game_id = next(iter(self._games))
+            del self._games[oldest_game_id]
+
         game_id = str(uuid.uuid4())
         game = StoredGame(
             game_id=game_id,
