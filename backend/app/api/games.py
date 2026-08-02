@@ -32,6 +32,8 @@ def _to_role_view(role: Role, rs: RoleState, order_delay_weeks: int) -> RoleView
         role=role,
         inventory=rs.inventory,
         backlog=rs.backlog,
+        last_shipment_received=rs.last_shipment_received,
+        last_week_cost=rs.last_week_cost,
         cumulative_cost=rs.cumulative_cost,
         last_order_placed=rs.last_order_placed,
         order_history=list(rs.order_history[order_delay_weeks:]),

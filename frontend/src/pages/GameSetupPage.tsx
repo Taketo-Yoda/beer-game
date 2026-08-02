@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createGame } from "../api/client";
-import { ROLE_LABELS, type GameStateView, type Role } from "../types";
+import { ROLE_ICONS, ROLE_LABELS, type GameStateView, type Role } from "../types";
 
 const ROLES: Role[] = ["retailer", "wholesaler", "distributor", "factory"];
 
@@ -39,6 +39,7 @@ export function GameSetupPage({ onStarted }: { onStarted: (state: GameStateView)
             className={role === selectedRole ? "role-button selected" : "role-button"}
             onClick={() => setSelectedRole(role)}
           >
+            <span className="role-button-icon">{ROLE_ICONS[role]}</span>
             {ROLE_LABELS[role]}
           </button>
         ))}

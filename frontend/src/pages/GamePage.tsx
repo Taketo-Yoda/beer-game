@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { submitOrder } from "../api/client";
-import { ROLE_LABELS, type GameStateView } from "../types";
+import { BeerStock, SupplyChainStrip } from "../components/GameVisuals";
+import { formatYen } from "../format";
+import type { GameStateView } from "../types";
 
 export function GamePage({
   state,
@@ -11,7 +13,7 @@ export function GamePage({
   onStateUpdated: (state: GameStateView) => void;
   onFinished: () => void;
 }) {
-  const [order, setOrder] = useState(String(state.demand_to_decide));
+  const [order, setOrder] = useState(String(state.you.last_order_placed));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +33,7 @@ export function GamePage({
         onFinished();
       } else {
         onStateUpdated(updated);
-        setOrder(String(updated.demand_to_decide));
+        setOrder(String(updated.you.last_order_placed));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -48,24 +50,35 @@ export function GamePage({
       <h1>
         第{state.week + 1}週 / 全{state.total_weeks}週
       </h1>
-      <p className="muted">あなたの役割: {ROLE_LABELS[state.human_role]}</p>
+
+      <SupplyChainStrip role={state.human_role} />
+
+      <div className="inventory-panel">
+        <span className="stat-label">在庫</span>
+        <span className="stat-value">{you.inventory}</span>
+        <BeerStock count={you.inventory} />
+      </div>
 
       <div className="stat-grid">
         <div className="stat-tile">
-          <span className="stat-label">在庫</span>
-          <span className="stat-value">{you.inventory}</span>
-        </div>
-        <div className="stat-tile">
           <span className="stat-label">受注残</span>
           <span className="stat-value">{you.backlog}</span>
+        </div>
+        <div className="stat-tile">
+          <span className="stat-label">今週の入荷</span>
+          <span className="stat-value">{you.last_shipment_received}</span>
         </div>
         <div className="stat-tile">
           <span className="stat-label">今週の受注</span>
           <span className="stat-value">{state.demand_to_decide}</span>
         </div>
         <div className="stat-tile">
+          <span className="stat-label">今週のコスト</span>
+          <span className="stat-value">{formatYen(you.last_week_cost)}</span>
+        </div>
+        <div className="stat-tile">
           <span className="stat-label">累計コスト</span>
-          <span className="stat-value">${you.cumulative_cost.toFixed(1)}</span>
+          <span className="stat-value">{formatYen(you.cumulative_cost)}</span>
         </div>
       </div>
 

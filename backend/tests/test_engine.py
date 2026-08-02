@@ -79,6 +79,8 @@ def test_insufficient_inventory_creates_backlog_and_cost():
     # 受注残1 + 顧客需要3 = 4 の需要に対し在庫は2しかないため、2出荷し受注残2が残る
     assert retailer.inventory == 0
     assert retailer.backlog == 2
+    assert retailer.last_shipment_received == 0
+    assert retailer.last_week_cost == pytest.approx(2.0)
     assert retailer.cumulative_cost == pytest.approx(2.0)
     assert retailer.inventory_history == (0,)
     assert retailer.backlog_history == (2,)
@@ -120,6 +122,7 @@ def test_shipping_delay_propagates_after_exact_number_of_weeks():
 
     state = advance_week(state, config, orders(0))
     assert state.roles[Role.FACTORY].inventory == 7
+    assert state.roles[Role.FACTORY].last_shipment_received == 7
 
 
 def test_order_delay_propagates_before_becoming_visible_demand():

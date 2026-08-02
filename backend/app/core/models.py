@@ -53,6 +53,8 @@ class RoleState(BaseModel):
     # 下流からの発注のうち、まだ自分に届いていない（伝達遅延中の）もの。FACTORYは常に空。
     incoming_orders: tuple[int, ...]
     last_order_placed: int = 0
+    last_shipment_received: int = 0
+    last_week_cost: float = 0.0
     cumulative_cost: float = 0.0
     order_history: tuple[int, ...] = ()
     inventory_history: tuple[int, ...] = ()
