@@ -249,6 +249,161 @@ h2 {
   font-size: 15px;
 }
 
+.turn-ritual {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ritual-step {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  transition: opacity 0.2s;
+}
+
+.ritual-step.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.ritual-step h2 {
+  margin-top: 0;
+}
+
+.order-card-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.order-card-back {
+  width: 64px;
+  height: 88px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--accent) 10%, var(--surface)),
+    color-mix(in srgb, var(--accent) 10%, var(--surface)) 6px,
+    var(--surface) 6px,
+    var(--surface) 12px
+  );
+  margin-right: -24px;
+}
+
+.flip-card {
+  width: 64px;
+  height: 88px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  perspective: 600px;
+}
+
+.flip-card:disabled {
+  cursor: default;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+}
+
+.flip-card.revealed .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  backface-visibility: hidden;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.flip-card-back {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--accent) 16%, var(--surface)),
+    color-mix(in srgb, var(--accent) 16%, var(--surface)) 6px,
+    var(--surface) 6px,
+    var(--surface) 12px
+  );
+  color: var(--text-secondary);
+}
+
+.flip-card-front {
+  background: var(--surface);
+  color: var(--text-primary);
+  transform: rotateY(180deg);
+  border-color: var(--accent);
+}
+
+.shipment-lane {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.shipment-slot {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 96px;
+}
+
+.shipment-slot.next {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.shipment-slot-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.shipment-slot-value {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.shipment-badge {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  color: var(--text-primary);
+  font-size: 13px;
+  animation: shipment-badge-fade 1.2s ease-out;
+}
+
+@keyframes shipment-badge-fade {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .history {
   margin-top: 20px;
 }

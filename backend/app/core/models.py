@@ -53,11 +53,6 @@ class RoleState(BaseModel):
     # 下流からの発注のうち、まだ自分に届いていない（伝達遅延中の）もの。FACTORYは常に空。
     incoming_orders: tuple[int, ...]
     last_order_placed: int = 0
-    last_shipment_received: int = 0
-    last_shipment_sent: int = 0
-    last_holding_cost: float = 0.0
-    last_backorder_cost: float = 0.0
-    last_week_cost: float = 0.0
     cumulative_cost: float = 0.0
     order_history: tuple[int, ...] = ()
     inventory_history: tuple[int, ...] = ()
@@ -70,3 +65,14 @@ class GameState(BaseModel):
     week: int
     roles: dict[Role, RoleState]
     is_finished: bool = False
+
+
+class TurnPreview(BaseModel):
+    """まだ提出していない今週の発注量には依存しない、次のadvance_week呼び出しで確定する結果のプレビュー。"""
+
+    model_config = ConfigDict(frozen=True)
+
+    shipment_received: int
+    shipment_sent: int
+    holding_cost: float
+    backorder_cost: float

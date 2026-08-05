@@ -1,7 +1,7 @@
 import pytest
 
 from app.core.bots import decide_bot_order
-from app.core.engine import advance_week, create_initial_state, peek_demand_this_week
+from app.core.engine import advance_week, create_initial_state, peek_demand_this_week, preview_turn
 from app.core.models import ROLE_CHAIN, GameConfig, GameState, Role, RoleState
 from app.core.scenarios import classic_customer_demand, default_config
 
@@ -79,11 +79,6 @@ def test_insufficient_inventory_creates_backlog_and_cost():
     # 受注残1 + 顧客需要3 = 4 の需要に対し在庫は2しかないため、2出荷し受注残2が残る
     assert retailer.inventory == 0
     assert retailer.backlog == 2
-    assert retailer.last_shipment_received == 0
-    assert retailer.last_shipment_sent == 2
-    assert retailer.last_holding_cost == pytest.approx(0.0)
-    assert retailer.last_backorder_cost == pytest.approx(2.0)
-    assert retailer.last_week_cost == pytest.approx(2.0)
     assert retailer.cumulative_cost == pytest.approx(2.0)
     assert retailer.inventory_history == (0,)
     assert retailer.backlog_history == (2,)
@@ -125,7 +120,6 @@ def test_shipping_delay_propagates_after_exact_number_of_weeks():
 
     state = advance_week(state, config, orders(0))
     assert state.roles[Role.FACTORY].inventory == 7
-    assert state.roles[Role.FACTORY].last_shipment_received == 7
 
 
 def test_order_delay_propagates_before_becoming_visible_demand():
@@ -189,6 +183,53 @@ def test_peek_demand_this_week_matches_what_advance_week_consumes():
 
     assert peek_demand_this_week(state, config, Role.RETAILER) == 4
     assert peek_demand_this_week(state, config, Role.WHOLESALER) == 4
+
+
+def test_preview_turn_matches_subsequent_advance_week_regardless_of_orders():
+    config = make_config(total_weeks=2, customer_demand=(3, 3))
+    state = GameState(
+        week=0,
+        roles={
+            Role.FACTORY: RoleState(inventory=100, backlog=0, incoming_shipments=(5, 5), incoming_orders=(5, 5)),
+            Role.DISTRIBUTOR: RoleState(
+                inventory=100, backlog=0, incoming_shipments=(5, 5), incoming_orders=(5, 5)
+            ),
+            Role.WHOLESALER: RoleState(
+                inventory=100, backlog=0, incoming_shipments=(5, 5), incoming_orders=(5, 5)
+            ),
+            Role.RETAILER: RoleState(inventory=2, backlog=1, incoming_shipments=(5, 5), incoming_orders=(5, 5)),
+        },
+    )
+
+    preview = preview_turn(state, config, Role.RETAILER)
+
+    assert preview.shipment_received == 5
+    # 受注残1 + 顧客需要3 = 4 の需要に対し、入荷後在庫7から4出荷
+    assert preview.shipment_sent == 4
+    # 出荷後在庫は7-4=3、受注残は0
+    assert preview.holding_cost == pytest.approx(3 * config.holding_cost_per_unit)
+    assert preview.backorder_cost == pytest.approx(0.0)
+
+    # これから提出する発注量を変えても、プレビューした今週の結果は変わらない
+    # （発注は将来のパイプラインにのみ影響するため）
+    for orders in ({role: 0 for role in ROLE_CHAIN}, {role: 999 for role in ROLE_CHAIN}):
+        new_state = advance_week(state, config, orders)
+        retailer = new_state.roles[Role.RETAILER]
+        assert retailer.inventory == 3
+        assert retailer.backlog == 0
+        assert retailer.cumulative_cost == pytest.approx(preview.holding_cost + preview.backorder_cost)
+
+
+def test_preview_turn_raises_once_game_is_finished():
+    config = make_config(total_weeks=1, customer_demand=(4,))
+    state = create_initial_state(config)
+    orders = {role: 4 for role in ROLE_CHAIN}
+
+    state = advance_week(state, config, orders)
+    assert state.is_finished
+
+    with pytest.raises(ValueError):
+        preview_turn(state, config, Role.RETAILER)
 
 
 def test_classic_customer_demand_surges_at_configured_week():

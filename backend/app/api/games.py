@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from ..core.bots import decide_bot_order
-from ..core.engine import advance_week, peek_demand_this_week
-from ..core.models import ROLE_CHAIN, Role, RoleState
+from ..core.engine import advance_week, peek_demand_this_week, preview_turn
+from ..core.models import ROLE_CHAIN, GameConfig, GameState, Role
 from ..core.scenarios import default_config
+from ..rate_limit import rate_limit
 from ..schemas import (
     CreateGameRequest,
     DebriefRoleView,
@@ -11,8 +12,8 @@ from ..schemas import (
     GameStateView,
     RoleView,
     SubmitOrderRequest,
+    TurnPreviewView,
 )
-from ..rate_limit import rate_limit
 from ..store.game_store import GameStore, StoredGame, get_game_store
 
 router = APIRouter(prefix="/api/games", tags=["games"], dependencies=[Depends(rate_limit)])
@@ -25,23 +26,33 @@ def _get_game_or_404(store: GameStore, game_id: str) -> StoredGame:
         raise HTTPException(status_code=404, detail="game not found") from None
 
 
-def _to_role_view(role: Role, rs: RoleState, order_delay_weeks: int) -> RoleView:
+def _to_role_view(state: GameState, config: GameConfig, role: Role) -> RoleView:
+    rs = state.roles[role]
+
+    if state.is_finished:
+        turn_preview = TurnPreviewView(shipment_received=0, shipment_sent=0, holding_cost=0.0, backorder_cost=0.0)
+    else:
+        preview = preview_turn(state, config, role)
+        turn_preview = TurnPreviewView(
+            shipment_received=preview.shipment_received,
+            shipment_sent=preview.shipment_sent,
+            holding_cost=preview.holding_cost,
+            backorder_cost=preview.backorder_cost,
+        )
+
     # order_historyは在庫ポジション計算のため開始時にorder_delay_weeks分だけ定常需要で
     # 種付けされている。inventory_history/backlog_historyと週数を揃えるため公開時に取り除く。
     return RoleView(
         role=role,
         inventory=rs.inventory,
         backlog=rs.backlog,
-        last_shipment_received=rs.last_shipment_received,
-        last_shipment_sent=rs.last_shipment_sent,
-        last_holding_cost=rs.last_holding_cost,
-        last_backorder_cost=rs.last_backorder_cost,
-        last_week_cost=rs.last_week_cost,
         cumulative_cost=rs.cumulative_cost,
         last_order_placed=rs.last_order_placed,
-        order_history=list(rs.order_history[order_delay_weeks:]),
+        order_history=list(rs.order_history[config.order_delay_weeks :]),
         inventory_history=list(rs.inventory_history),
         backlog_history=list(rs.backlog_history),
+        pending_shipments=list(rs.incoming_shipments),
+        turn_preview=turn_preview,
     )
 
 
@@ -55,8 +66,9 @@ def _to_state_view(game: StoredGame) -> GameStateView:
         total_weeks=game.config.total_weeks,
         is_finished=game.state.is_finished,
         human_role=game.human_role,
-        you=_to_role_view(game.human_role, game.state.roles[game.human_role], game.config.order_delay_weeks),
+        you=_to_role_view(game.state, game.config, game.human_role),
         demand_to_decide=demand_to_decide,
+        order_delay_weeks=game.config.order_delay_weeks,
     )
 
 

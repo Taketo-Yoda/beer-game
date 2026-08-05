@@ -1,4 +1,4 @@
-from .models import ROLE_CHAIN, GameConfig, GameState, Role, RoleState, downstream_of, upstream_of
+from .models import ROLE_CHAIN, GameConfig, GameState, Role, RoleState, TurnPreview, downstream_of, upstream_of
 
 
 def create_initial_state(config: GameConfig) -> GameState:
@@ -35,6 +35,32 @@ def peek_demand_this_week(state: GameState, config: GameConfig, role: Role) -> i
     return rs.incoming_orders[0] if rs.incoming_orders else 0
 
 
+def preview_turn(state: GameState, config: GameConfig, role: Role) -> TurnPreview:
+    """まだ発注していない今週の入荷・出荷・コストを、状態を変更せずに確認する。
+
+    これから提出する発注量には依存しない（発注は将来のパイプラインにのみ影響するため）。
+    advance_week()のPhase 1〜4と同じ計算を1役割分だけ行う。
+    """
+    if state.is_finished:
+        raise ValueError("game already finished")
+
+    rs = state.roles[role]
+    demand = peek_demand_this_week(state, config, role)
+    arrived = rs.incoming_shipments[0] if rs.incoming_shipments else 0
+    inventory_after_receive = rs.inventory + arrived
+    total_demand = rs.backlog + demand
+    ship_qty = min(inventory_after_receive, total_demand)
+    ending_inventory = inventory_after_receive - ship_qty
+    ending_backlog = total_demand - ship_qty
+
+    return TurnPreview(
+        shipment_received=arrived,
+        shipment_sent=ship_qty,
+        holding_cost=ending_inventory * config.holding_cost_per_unit,
+        backorder_cost=ending_backlog * config.backorder_cost_per_unit,
+    )
+
+
 def advance_week(state: GameState, config: GameConfig, orders: dict[Role, int]) -> GameState:
     """入荷→受注確認→出荷→コスト加算→発注 の順に1週間分を全役割へ適用し、新しいGameStateを返す。"""
     if state.is_finished:
@@ -57,7 +83,6 @@ def advance_week(state: GameState, config: GameConfig, orders: dict[Role, int]) 
             update={
                 "inventory": rs.inventory + arrived,
                 "incoming_shipments": rs.incoming_shipments[1:],
-                "last_shipment_received": arrived,
             }
         )
 
@@ -83,7 +108,6 @@ def advance_week(state: GameState, config: GameConfig, orders: dict[Role, int]) 
             update={
                 "inventory": rs.inventory - ship_qty,
                 "backlog": total_demand - ship_qty,
-                "last_shipment_sent": ship_qty,
             }
         )
 
@@ -95,9 +119,6 @@ def advance_week(state: GameState, config: GameConfig, orders: dict[Role, int]) 
         cost = holding_cost + backorder_cost
         stage4[role] = rs.model_copy(
             update={
-                "last_holding_cost": holding_cost,
-                "last_backorder_cost": backorder_cost,
-                "last_week_cost": cost,
                 "cumulative_cost": rs.cumulative_cost + cost,
                 "inventory_history": rs.inventory_history + (rs.inventory,),
                 "backlog_history": rs.backlog_history + (rs.backlog,),

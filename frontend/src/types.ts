@@ -26,20 +26,26 @@ export function downstreamOf(role: Role): Role | null {
   return index < ROLE_CHAIN.length - 1 ? ROLE_CHAIN[index + 1] : null;
 }
 
+export interface TurnPreview {
+  shipment_received: number;
+  shipment_sent: number;
+  holding_cost: number;
+  backorder_cost: number;
+}
+
 export interface RoleView {
   role: Role;
   inventory: number;
   backlog: number;
-  last_shipment_received: number;
-  last_shipment_sent: number;
-  last_holding_cost: number;
-  last_backorder_cost: number;
-  last_week_cost: number;
   cumulative_cost: number;
   last_order_placed: number;
   order_history: number[];
   inventory_history: number[];
   backlog_history: number[];
+  // 輸送中トークンの生データ。先頭が今週到着する分。
+  pending_shipments: number[];
+  // まだ発注していない今週の入荷・出荷・コストのプレビュー
+  turn_preview: TurnPreview;
 }
 
 export interface GameStateView {
@@ -50,6 +56,7 @@ export interface GameStateView {
   human_role: Role;
   you: RoleView;
   demand_to_decide: number;
+  order_delay_weeks: number;
 }
 
 export interface DebriefRoleView {

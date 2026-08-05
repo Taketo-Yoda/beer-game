@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { submitOrder } from "../api/client";
-import { BeerStock, SupplyChainStrip } from "../components/GameVisuals";
+import { SupplyChainStrip } from "../components/GameVisuals";
+import { TurnRitual } from "../components/TurnRitual";
 import { formatManYen } from "../format";
 import type { GameStateView } from "../types";
 
@@ -13,35 +12,6 @@ export function GamePage({
   onStateUpdated: (state: GameStateView) => void;
   onFinished: () => void;
 }) {
-  const [order, setOrder] = useState(String(state.you.last_order_placed));
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    const orderQty = Number(order);
-    if (!Number.isInteger(orderQty) || orderQty < 0) {
-      setError("発注量は0以上の整数で入力してください");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      const updated = await submitOrder(state.game_id, orderQty);
-      if (updated.is_finished) {
-        onFinished();
-      } else {
-        onStateUpdated(updated);
-        setOrder(String(updated.you.last_order_placed));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
   const { you } = state;
   const recentOrders = you.order_history.slice(-8);
 
@@ -53,35 +23,10 @@ export function GamePage({
 
       <SupplyChainStrip role={state.human_role} />
 
-      <div className="inventory-panel">
-        <span className="stat-label">在庫</span>
-        <span className="stat-value">{you.inventory}</span>
-        <BeerStock count={you.inventory} />
-      </div>
-
       <div className="stat-grid">
         <div className="stat-tile">
           <span className="stat-label">受注残</span>
           <span className="stat-value">{you.backlog}</span>
-        </div>
-        <div className="stat-tile">
-          <span className="stat-label">今週の入荷</span>
-          <span className="stat-value">{you.last_shipment_received}</span>
-        </div>
-        <div className="stat-tile">
-          <span className="stat-label">今週の出荷</span>
-          <span className="stat-value">{you.last_shipment_sent}</span>
-        </div>
-        <div className="stat-tile">
-          <span className="stat-label">今週の受注</span>
-          <span className="stat-value">{state.demand_to_decide}</span>
-        </div>
-        <div className="stat-tile">
-          <span className="stat-label">今週のコスト</span>
-          <span className="stat-value">{formatManYen(you.last_week_cost)}</span>
-          <span className="stat-breakdown">
-            在庫 {formatManYen(you.last_holding_cost)} / 受注残 {formatManYen(you.last_backorder_cost)}
-          </span>
         </div>
         <div className="stat-tile">
           <span className="stat-label">累計コスト</span>
@@ -89,22 +34,7 @@ export function GamePage({
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="order-form">
-        <label htmlFor="order-input">上流への発注量</label>
-        <input
-          id="order-input"
-          type="number"
-          min={0}
-          step={1}
-          value={order}
-          onChange={(event) => setOrder(event.target.value)}
-        />
-        <button type="submit" className="primary-button" disabled={isSubmitting}>
-          {isSubmitting ? "処理中..." : "発注して次の週へ"}
-        </button>
-      </form>
-
-      {error && <p className="error">エラー: {error}</p>}
+      <TurnRitual state={state} onStateUpdated={onStateUpdated} onFinished={onFinished} />
 
       {recentOrders.length > 0 && (
         <div className="history">

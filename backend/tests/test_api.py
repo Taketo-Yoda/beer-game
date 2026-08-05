@@ -25,6 +25,19 @@ def test_create_game_returns_initial_state():
     assert game["you"]["inventory"] == 12
     assert game["you"]["backlog"] == 0
     assert game["demand_to_decide"] == 4
+    assert game["order_delay_weeks"] == 2
+    assert game["you"]["pending_shipments"] == [4, 4]
+    assert game["you"]["turn_preview"] == {
+        "shipment_received": 4,
+        "shipment_sent": 4,
+        "holding_cost": 6.0,
+        "backorder_cost": 0.0,
+    }
+
+
+def test_pending_shipments_length_matches_production_delay_for_factory():
+    game = create_game("factory")
+    assert len(game["you"]["pending_shipments"]) == 2  # production_delay_weeksのデフォルト
 
 
 def test_get_game_returns_same_state():
